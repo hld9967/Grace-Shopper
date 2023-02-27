@@ -13,10 +13,26 @@ const User = db.define('user', {
   },
   password: {
     type: Sequelize.STRING,
+  },
+  email: {
+    type: Sequelize.STRING,
+    unique:true,
+    allowNull: false,
+    validate: {
+      isEmail: true,
+    }
+  },
+  first: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+  last: {
+    type: Sequelize.STRING,
+    allowNull: false,
   }
 })
 
-module.exports = User
+module.exports = User;
 
 /**
  * instanceMethods
