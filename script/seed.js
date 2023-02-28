@@ -47,7 +47,7 @@ async function seed() {
     }),
     Potion.create({ 
       name:'Mana Potion',
-      imageUrl: 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/d7f5f3ab-2b08-4ac5-9a85-c3073a8dfae2/d8xw454-d90ea71a-4bff-4424-bd35-cfe7e0fa3c93.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcL2Q3ZjVmM2FiLTJiMDgtNGFjNS05YTg1LWMzMDczYThkZmFlMlwvZDh4dzQ1NC1kOTBlYTcxYS00YmZmLTQ0MjQtYmQzNS1jZmU3ZTBmYTNjOTMucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.49Cqr8cXNXVMSAcgpRCFIfXAErTEB6nd3BFXY9Rhw4c',
+      imageUrl: 'https://www.worldanvil.com/uploads/images/fb1209fd22e58fbf60e5725b7d368d1d.jpg',
       description: 'lorem Ipsum',
       price: 20
     }),
@@ -75,6 +75,7 @@ async function seed() {
     Skill.create({ 
       name:'Savage Sweep',
       imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2VFUACPjq9cyR5UBBVWLTwvFeuB4h6AYrRA&usqp=CAU',
+      description: 'lorem Ipsum',
       price: 70
     }),
     Skill.create({ 
@@ -127,7 +128,7 @@ async function seed() {
     }),
     Travel.create({ 
       name:'Map of the Hyrule',
-      imageUrl: 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/85043400-f2c2-4594-97e9-61c3ffcd403e/dax1ihg-507ad175-bc5d-4703-a479-c46e0b4abf54.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzg1MDQzNDAwLWYyYzItNDU5NC05N2U5LTYxYzNmZmNkNDAzZVwvZGF4MWloZy01MDdhZDE3NS1iYzVkLTQ3MDMtYTQ3OS1jNDZlMGI0YWJmNTQucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.UR2SJJxfyCeGWNzfrZR3wirknD1JDWVl0j2JoydXSQY',
+      imageUrl: 'https://static.wikia.nocookie.net/zelda_gamepedia_en/images/c/ce/TAoL_Hyrule_Map_3.png/revision/latest?cb=20180104175707',
       description: 'lorem Ipsum',
       price: 60
     }),
@@ -139,7 +140,7 @@ async function seed() {
     }),
   ]);
 
-  const weapons = await Promise.al([
+  const weapons = await Promise.all([
     Weapon.create({ 
       name:'Heavy armor',
       imageUrl: 'https://i.pinimg.com/originals/98/65/ba/9865bab2a3a928eb54164138d87d2852.jpg',
@@ -185,12 +186,12 @@ async function seed() {
   ]);
 
   console.log(`seeded ${users.length} users`)
-  console,log(`seeded ${armors.length} armors`)
-  console,log(`seeded ${potions.length} potions`)
-  console,log(`seeded ${skills.length} skills`)
-  console,log(`seeded ${spells.length} spells`)
-  console,log(`seeded ${travels.length} travels`)
-  console,log(`seeded ${weapons.length} weapons`)
+  console.log(`seeded ${armors.length} armors`)
+  console.log(`seeded ${potions.length} potions`)
+  console.log(`seeded ${skills.length} skills`)
+  console.log(`seeded ${spells.length} spells`)
+  console.log(`seeded ${travels.length} travels`)
+  console.log(`seeded ${weapons.length} weapons`)
   console.log(`seeded successfully`)
   return {
     users: {
@@ -226,12 +227,12 @@ async function seed() {
       teleportationCrystal: travels[3]
     },
     weapons: {
-      nobleSword: products[0],
-      brutalAxe: products[1],
-      mightyHamer: products[2],
-      fireStaff: products[3],
-      iceStaff: products[4],
-      lightningStaff: products[5],
+      nobleSword: weapons[0],
+      brutalAxe: weapons[1],
+      mightyHamer: weapons[2],
+      fireStaff: weapons[3],
+      iceStaff: weapons[4],
+      lightningStaff: weapons[5],
     }
   }
 };
