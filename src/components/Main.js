@@ -4,8 +4,8 @@ import {
   Routes,
   Route,
 } from "react-router-dom";
-import AllItems from "./allitems";
-import { fetchAllProductsAsync } from "../features/allitemsSlice"
+import AllItems from "./AllProducts";
+import { fetchAllProductsAsync } from "../features/allProductSlice"
 import { useDispatch } from "react-redux";
 import { Navbar } from "./";
 
