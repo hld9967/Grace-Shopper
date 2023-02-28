@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { models: { Product }} = require('../db')
+module.exports = router;
 
 router.get('/', async (req, res, next) => {
     try {
@@ -14,12 +15,13 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:productId', async (req, res, next) => {
     try {
-      const product = await Armor.findByPk(req.params.productId)
+      const product = await Armor.findByPk(req.params.productId, {
+        attributes: ['id', 'name', 'imageUrl', 'description', 'price']
+      })
       res.json(product)
-    }
-    catch (error) {
-      next(error)
+    } catch (err) {
+      next(err)
     }
   })
 
-module.exports = router;
+// module.exports = router;

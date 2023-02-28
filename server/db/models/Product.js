@@ -1,8 +1,5 @@
-const { INTEGER } = require('sequelize')
 const Sequelize = require('sequelize')
-const { INSERT } = require('sequelize/types/query-types')
 const db = require('../db')
-
 
 const Product = db.define('product', {
   name: {
@@ -25,7 +22,7 @@ const Product = db.define('product', {
     }
 },
 price: {
-    type: INTEGER.STRING(100),
+    type: Sequelize.STRING(100),
     allowNull: false,
     validate: {
       min: 1,
@@ -34,4 +31,4 @@ price: {
 }
 })
 
-module.exports = Product
+module.exports = Product;
