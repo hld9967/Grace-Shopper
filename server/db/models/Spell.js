@@ -31,4 +31,4 @@ price: {
 }
 })
 
-module.exports = Skill;
+module.exports = Spell;
