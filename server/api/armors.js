@@ -4,21 +4,21 @@ module.exports = router;
 
 router.get('/', async (req, res, next) => {
     try {
-        const products = await Product.findAll({
+        const armors = await Armor.findAll({
             attributes: ['id', 'name', 'imageUrl', 'description', 'price']
         })
-        res.json(products)
+        res.json(armors)
     } catch (err) {
         next(err);
     }
 })
 
-router.get('/:productId', async (req, res, next) => {
+router.get('/:armorId', async (req, res, next) => {
     try {
-      const product = await Armor.findByPk(req.params.productId, {
+      const armor = await Armor.findByPk(req.params.armorId, {
         attributes: ['id', 'name', 'imageUrl', 'description', 'price']
       })
-      res.json(product)
+      res.json(armor)
     } catch (err) {
       next(err)
     }
