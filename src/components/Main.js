@@ -7,7 +7,8 @@ import {
 import AllItems from "./AllProducts";
 import { fetchAllProductsAsync } from "../features/allProductSlice"
 import { useDispatch } from "react-redux";
-import { Navbar } from "./";
+import { Navbar, SinglePotion } from "./";
+import AllPotions from "./AllPotions";
 
 
 const Main = () => {
@@ -23,8 +24,8 @@ const Main = () => {
         <Navbar />
         <Routes>
           <Route path="/allProducts" element={<AllItems />} />
-          <Route/>
-          <Route/>
+          <Route path="/allPotions" element={<AllPotions />} />
+          <Route path="/singlePotion" element={<SinglePotion />} />
           <Route/>
           <Route/>
           <Route/>
