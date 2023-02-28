@@ -22,13 +22,20 @@ const Potion = db.define('potion', {
     }
 },
 price: {
-    type: Sequelize.STRING(10),
-    allowNull: false,
-    validate: {
-      min: 1,
-      max: 99
-    }
-}
+  type: Sequelize.DECIMAL(3,2),
+  allowNull: false,
+  validate: {
+    min: 1,
+    max: 100
+  }
+},
+// categories:{
+//    type: Sequelize.STRING,
+//    allowNull:false,
+//    validate: {
+//    equals: "Armor"
+//    }
+// }
 })
 
 module.exports = Potion;

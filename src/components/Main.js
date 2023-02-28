@@ -23,9 +23,9 @@ const Main = () => {
       <div>
         <Navbar />
         <Routes>
-          <Route path="/allProducts" element={<AllItems />} />
+          <Route path="/allProducts" element={<AllProducts />} />
           <Route path="/allPotions" element={<AllPotions />} />
-          <Route path="/singlePotion" element={<SinglePotion />} />
+          {/* <Route path="/singlePotion" element={<SinglePotion />} /> */}
           <Route/>
           <Route/>
           <Route/>

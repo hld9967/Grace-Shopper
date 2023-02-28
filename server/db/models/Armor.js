@@ -22,13 +22,20 @@ const Armor = db.define('armor', {
     }
 },
 price: {
-    type: Sequelize.STRING(10),
+    type: Sequelize.DECIMAL(3,2),
     allowNull: false,
     validate: {
       min: 1,
-      max: 99
+      max: 100
     }
-}
+},
+// categories:{
+//    type: Sequelize.STRING,
+//    allowNull:false,
+//    validate: {
+//    equals: "Armor"
+//    }
+// }
 })
 
 module.exports = Armor;

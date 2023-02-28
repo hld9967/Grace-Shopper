@@ -201,7 +201,7 @@ async function seed() {
     armors: {
       lightArmor: armors[0],
       mediumArmor: armors[1],
-      heavyArmot: armors[2],
+      heavyArmor: armors[2],
     },
     potions: {
       healingPotion: potions[0],
@@ -229,7 +229,7 @@ async function seed() {
     weapons: {
       nobleSword: weapons[0],
       brutalAxe: weapons[1],
-      mightyHamer: weapons[2],
+      mightyHammer: weapons[2],
       fireStaff: weapons[3],
       iceStaff: weapons[4],
       lightningStaff: weapons[5],
