@@ -22,7 +22,7 @@ async function seed() {
       name:'Light Armor',
       imageUrl: 'https://preview.redd.it/9lm0vpsmke361.jpg?auto=webp&s=d585fe32c9bda9d357e2e93f8bb3954372b64be9',
       description: 'lorem Ipsum',
-      price: 20
+      price: 30
     }),
     Product.create({ 
       name:'Medium Armor',

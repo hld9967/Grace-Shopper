@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize')
 const db = require('../db')
 
-const Product = db.define('product', {
+const Spell = db.define('spell', {
   name: {
     type: Sequelize.STRING,
     unique: true,
@@ -31,4 +31,4 @@ price: {
 }
 })
 
-// module.exports = Product;
+module.exports = Skill;
