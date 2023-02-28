@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 export const fetchSingleProductAsync = createAsyncThunk(
-  "singleStudent",
+  "singleProduct",
   async id => {
     try {
       const { data } = await axios.get(`/api/products/${id}`);
@@ -26,7 +26,7 @@ export const createProductAsync = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      console.error("Error creating student: ", error);
+      console.error("Error creating product: ", error);
       throw error; // re-throw the error to trigger the rejected state of the thunk
     }
   }
