@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize')
 const db = require('../db')
 
-const skill = db.define('skill', {
+const Skill = db.define('skill', {
   name: {
     type: Sequelize.STRING,
     unique: true,
