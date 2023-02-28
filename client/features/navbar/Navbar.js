@@ -19,15 +19,7 @@ const Navbar = () => {
         {isLoggedIn ? (
           <div>
             {/* The navbar will show these links after you log in */}
-<<<<<<< Updated upstream
             <button type="button" onClick={logoutAndRedirectHome}>
-=======
-            <Link to="/home">Home</Link>
-            <Link to="/products">Products</Link>
-            <Link to="/categories">Categories</Link>
-            <Link to="/account">Account</Link>
-            <button type="button" onClick={logoutAndRedirectHome}
->>>>>>> Stashed changes
               Logout
             </button>
           </div>

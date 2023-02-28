@@ -1,15 +1,14 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { addItems, removeItems, updateItems } from './allItemsSlice';
 
-function AllItems() {
-  const allItems = useSelector(state => state.allItems);
+function AllProducts() {
+  const allProducts = useSelector(state => state.allItems);
   const dispatch = useDispatch();
 
   const handleAddItem = () => {
-    dispatch(addItems({ id: allItems.length + 1, name: 'New Item' }));
+    dispatch(addItems({ id: allProducts.length + 1, name: 'New Item' }));
   };
 
   const handleRemoveItem = item => {
@@ -24,7 +23,7 @@ function AllItems() {
     <div>
       <h1>All Items</h1>
       <ul>
-        {allItems.map(item => (
+        {allProducts.map(item => (
           <li key={item.id}>
             <input type="text" value={item.name} onChange={e => handleUpdateItem({ ...item, name: e.target.value })} />
             <button onClick={() => handleRemoveItem(item)}>Remove</button>
@@ -36,4 +35,5 @@ function AllItems() {
   );
 }
 
-export default AllItems;
+export default AllProducts;
+
