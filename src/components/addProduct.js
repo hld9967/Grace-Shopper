@@ -5,6 +5,7 @@ import { addProductAsync } from '../features/allProductsSlice';
 const addProduct = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
   const dispatch = useDispatch();
 
   const handleNameChanged = (e) => {
@@ -15,11 +16,16 @@ const addProduct = () => {
     setDescription(e.target.value);
   };
 
+  const handlePriceChanged = (e) => {
+    setPrice(e.target.value);
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    dispatch(addProductAsync({ name, address }));
+    dispatch(addProductAsync({ name, description, price }));
     setName('');
-    setAddress('');
+    setDescription('');
+    setPrice(''); 
   };
 
   return (
@@ -33,12 +39,19 @@ const addProduct = () => {
           value={name}
           onChange={handleNameChanged}
         />
-        <label htmlFor="productDescription"> Product Description</label>
+        <label htmlFor="productDescription"> Product Description:</label>
         <input
           type="text"
           id="productDescription"
           value={description}
           onChange={handleDescriptionChanged}
+        />
+         <label htmlFor="productPrice">Product Price:</label>
+        <input
+          type="text"
+          id="productPrice"
+          value={price}
+          onChange={handlePriceChanged}
         />
         <button type="submit">Submit</button>
       </form>
