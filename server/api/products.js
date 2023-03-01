@@ -1,8 +1,7 @@
 const router = require('express').Router()
-const { default: allProductSlice } = require('../../src/features/allProductSlice')
 const { Product } = require('../db')
 
-// GET /api/campuses
+// GET /api/allProducts
 router.get('/', async (req, res, next) => {
     try {
         const product = await Product.findAll({
@@ -27,7 +26,7 @@ router.get('/allProducts', async (req, res, next) => {
 })
 
 //PUT UPDATE /api/allProducts/:productId 
-router.put('/:productId ', async (req, res) => {
+router.put('/allProducts/:productId', async (req, res) => {
     try {
       const productId = req.params.id;
       const updatedProduct = req.body;
