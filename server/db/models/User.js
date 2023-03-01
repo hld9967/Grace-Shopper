@@ -16,19 +16,12 @@ const User = db.define('user', {
   },
   email: {
     type: Sequelize.STRING,
-    unique:true,
-    allowNull: false,
-    validate: {
-      isEmail: true,
-    }
   },
-  first: {
-    type: Sequelize.STRING,
-    allowNull: false,
+  firstName: {
+    type: Sequelize.STRING
   },
-  last: {
-    type: Sequelize.STRING,
-    allowNull: false,
+  lastName: {
+    type: Sequelize.STRING
   }
 })
 

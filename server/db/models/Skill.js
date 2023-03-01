@@ -22,7 +22,7 @@ const Skill = db.define('skill', {
     }
 },
 price: {
-  type: Sequelize.DECIMAL(3,2),
+  type: Sequelize.DECIMAL(5,2),
   allowNull: false,
   validate: {
     min: 1,
@@ -36,13 +36,11 @@ price: {
 //     max: 100
 //   }
 },
-// categories:{
-//    type: Sequelize.STRING,
-//    allowNull:false,
-//    validate: {
-//    equals: "Armor"
-//    }
-// }
+categories:{
+   type: Sequelize.STRING,
+   allowNull:false,
+   defaultValue: "Skill"
+}
 })
 
 module.exports = Skill;
