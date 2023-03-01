@@ -22,19 +22,19 @@ async function seed() {
       name:'Light Armor',
       imageUrl: 'https://preview.redd.it/9lm0vpsmke361.jpg?auto=webp&s=d585fe32c9bda9d357e2e93f8bb3954372b64be9',
       description: 'lorem Ipsum',
-      price: 30
+      price: 30.60
     }),
     Armor.create({ 
       name:'Medium Armor',
       imageUrl: 'https://i.pinimg.com/originals/83/fe/10/83fe1081dd6d6c44843ecb7989bf9c9a.jpg',
       description: 'lorem Ipsum',
-      price: 30
+      price: 40.20
     }),
     Armor.create({ 
       name:'Heavy armor',
       imageUrl: 'https://i.pinimg.com/originals/98/65/ba/9865bab2a3a928eb54164138d87d2852.jpg',
       description: 'lorem Ipsum',
-      price: 30
+      price: 50.40
     }),
   ]);
 
