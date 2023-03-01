@@ -1,9 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { allProductsSlice } from '../features/allProductSlice';
+import { singleProductSlice } from '../features/singleProductSlice';
+
+
 
 const store = configureStore({
     reducer: {
-      items: itemsReducer,
-      item: itemReducer
+      allProducts: allProductsSlice,
+      singleProduct: singleProductSlice
     },
   });
+
+
+export default store;
 
