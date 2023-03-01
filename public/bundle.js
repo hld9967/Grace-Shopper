@@ -2015,7 +2015,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "UNSAFE_DeferredData": () => (/* binding */ DeferredData),
 /* harmony export */   "UNSAFE_convertRoutesToDataRoutes": () => (/* binding */ convertRoutesToDataRoutes),
 /* harmony export */   "UNSAFE_getPathContributingMatches": () => (/* binding */ getPathContributingMatches),
-/* harmony export */   "UNSAFE_invariant": () => (/* binding */ invariant),
 /* harmony export */   "createBrowserHistory": () => (/* binding */ createBrowserHistory),
 /* harmony export */   "createHashHistory": () => (/* binding */ createHashHistory),
 /* harmony export */   "createMemoryHistory": () => (/* binding */ createMemoryHistory),
@@ -2026,6 +2025,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "generatePath": () => (/* binding */ generatePath),
 /* harmony export */   "getStaticContextFromError": () => (/* binding */ getStaticContextFromError),
 /* harmony export */   "getToPathname": () => (/* binding */ getToPathname),
+/* harmony export */   "invariant": () => (/* binding */ invariant),
 /* harmony export */   "isRouteErrorResponse": () => (/* binding */ isRouteErrorResponse),
 /* harmony export */   "joinPaths": () => (/* binding */ joinPaths),
 /* harmony export */   "json": () => (/* binding */ json),
@@ -2040,7 +2040,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "warning": () => (/* binding */ warning)
 /* harmony export */ });
 /**
- * @remix-run/router v1.3.3
+ * @remix-run/router v1.3.2
  *
  * Copyright (c) Remix Software Inc.
  *
@@ -3482,8 +3482,7 @@ const isServer = !isBrowser; //#endregion
 
 function createRouter(init) {
   invariant(init.routes.length > 0, "You must provide a non-empty routes array to createRouter");
-  let dataRoutes = convertRoutesToDataRoutes(init.routes);
-  let inFlightDataRoutes; // Cleanup function for history
+  let dataRoutes = convertRoutesToDataRoutes(init.routes); // Cleanup function for history
 
   let unlistenHistory = null; // Externally-provided functions to call on all state changes
 
@@ -3719,12 +3718,6 @@ function createRouter(init) {
 
 
     let preventScrollReset = pendingPreventScrollReset === true || state.navigation.formMethod != null && isMutationMethod(state.navigation.formMethod) && ((_location$state2 = location.state) == null ? void 0 : _location$state2._isRedirect) !== true;
-
-    if (inFlightDataRoutes) {
-      dataRoutes = inFlightDataRoutes;
-      inFlightDataRoutes = undefined;
-    }
-
     updateState(_extends({}, newState, {
       actionData,
       loaderData,
@@ -3879,9 +3872,8 @@ function createRouter(init) {
 
     saveScrollPosition(state.location, state.matches);
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
-    let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
-    let matches = matchRoutes(routesToUse, location, init.basename); // Short circuit with a 404 on the root error boundary if we match nothing
+    let matches = matchRoutes(dataRoutes, location, init.basename); // Short circuit with a 404 on the root error boundary if we match nothing
 
     if (!matches) {
       let error = getInternalRouterError(404, {
@@ -3890,7 +3882,7 @@ function createRouter(init) {
       let {
         matches: notFoundMatches,
         route
-      } = getShortCircuitMatches(routesToUse); // Cancel all pending deferred on 404s since we don't keep any routes
+      } = getShortCircuitMatches(dataRoutes); // Cancel all pending deferred on 404s since we don't keep any routes
 
       cancelActiveDeferreds();
       completeNavigation(location, {
@@ -4095,8 +4087,7 @@ function createRouter(init) {
       formData: loadingNavigation.formData,
       formEncType: loadingNavigation.formEncType
     } : undefined;
-    let routesToUse = inFlightDataRoutes || dataRoutes;
-    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(init.history, state, matches, activeSubmission, location, isRevalidationRequired, cancelledDeferredRoutes, cancelledFetcherLoads, fetchLoadMatches, routesToUse, init.basename, pendingActionData, pendingError); // Cancel pending deferreds for no-longer-matched routes or routes we're
+    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(init.history, state, matches, activeSubmission, location, isRevalidationRequired, cancelledDeferredRoutes, cancelledFetcherLoads, pendingActionData, pendingError, fetchLoadMatches); // Cancel pending deferreds for no-longer-matched routes or routes we're
     // about to reload.  Note that if this is an action reload we would have
     // already cancelled all pending deferreds so this would be a no-op
 
@@ -4213,8 +4204,7 @@ function createRouter(init) {
     }
 
     if (fetchControllers.has(key)) abortFetcher(key);
-    let routesToUse = inFlightDataRoutes || dataRoutes;
-    let matches = matchRoutes(routesToUse, href, init.basename);
+    let matches = matchRoutes(dataRoutes, href, init.basename);
 
     if (!matches) {
       setFetcherError(key, routeId, getInternalRouterError(404, {
@@ -4239,7 +4229,9 @@ function createRouter(init) {
 
     fetchLoadMatches.set(key, {
       routeId,
-      path
+      path,
+      match,
+      matches
     });
     handleFetcherLoader(key, routeId, path, match, matches, submission);
   } // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -4326,8 +4318,7 @@ function createRouter(init) {
 
     let nextLocation = state.navigation.location || state.location;
     let revalidationRequest = createClientSideRequest(init.history, nextLocation, abortController.signal);
-    let routesToUse = inFlightDataRoutes || dataRoutes;
-    let matches = state.navigation.state !== "idle" ? matchRoutes(routesToUse, state.navigation.location, init.basename) : state.matches;
+    let matches = state.navigation.state !== "idle" ? matchRoutes(dataRoutes, state.navigation.location, init.basename) : state.matches;
     invariant(matches, "Didn't find any matches after fetcher action");
     let loadId = ++incrementingLoadId;
     fetchReloadIds.set(key, loadId);
@@ -4340,10 +4331,10 @@ function createRouter(init) {
     });
 
     state.fetchers.set(key, loadFetcher);
-    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(init.history, state, matches, submission, nextLocation, isRevalidationRequired, cancelledDeferredRoutes, cancelledFetcherLoads, fetchLoadMatches, routesToUse, init.basename, {
+    let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(init.history, state, matches, submission, nextLocation, isRevalidationRequired, cancelledDeferredRoutes, cancelledFetcherLoads, {
       [match.route.id]: actionResult.data
-    }, undefined // No need to send through errors since we short circuit above
-    ); // Put all revalidating fetchers into the loading state, except for the
+    }, undefined, // No need to send through errors since we short circuit above
+    fetchLoadMatches); // Put all revalidating fetchers into the loading state, except for the
     // current fetcher which we want to keep in it's current loading state which
     // contains it's action submission info + action data
 
@@ -4549,10 +4540,9 @@ function createRouter(init) {
     invariant(redirectLocation, "Expected a location on the redirect navigation"); // Check if this an absolute external redirect that goes to a new origin
 
     if (ABSOLUTE_URL_REGEX.test(redirect.location) && isBrowser && typeof ((_window = window) == null ? void 0 : _window.location) !== "undefined") {
-      let url = init.history.createURL(redirect.location);
-      let isDifferentBasename = stripBasename(url.pathname, init.basename || "/") == null;
+      let newOrigin = init.history.createURL(redirect.location).origin;
 
-      if (window.location.origin !== url.origin || isDifferentBasename) {
+      if (window.location.origin !== newOrigin) {
         if (replace) {
           window.location.replace(redirect.location);
         } else {
@@ -4618,19 +4608,7 @@ function createRouter(init) {
     // Call all navigation loaders and revalidating fetcher loaders in parallel,
     // then slice off the results into separate arrays so we can handle them
     // accordingly
-    let results = await Promise.all([...matchesToLoad.map(match => callLoaderOrAction("loader", request, match, matches, router.basename)), ...fetchersToLoad.map(f => {
-      if (f.matches && f.match) {
-        return callLoaderOrAction("loader", createClientSideRequest(init.history, f.path, request.signal), f.match, f.matches, router.basename);
-      } else {
-        let error = {
-          type: ResultType.error,
-          error: getInternalRouterError(404, {
-            pathname: f.path
-          })
-        };
-        return error;
-      }
-    })]);
+    let results = await Promise.all([...matchesToLoad.map(match => callLoaderOrAction("loader", request, match, matches, router.basename)), ...fetchersToLoad.map(f => callLoaderOrAction("loader", createClientSideRequest(init.history, f.path, request.signal), f.match, f.matches, router.basename))]);
     let loaderResults = results.slice(0, matchesToLoad.length);
     let fetcherResults = results.slice(matchesToLoad.length);
     await Promise.all([resolveDeferredResults(currentMatches, matchesToLoad, loaderResults, request.signal, false, state.loaderData), resolveDeferredResults(currentMatches, fetchersToLoad.map(f => f.match), fetcherResults, request.signal, true)]);
@@ -4865,10 +4843,6 @@ function createRouter(init) {
     return null;
   }
 
-  function _internalSetRoutes(newRoutes) {
-    inFlightDataRoutes = newRoutes;
-  }
-
   router = {
     get basename() {
       return init.basename;
@@ -4898,10 +4872,7 @@ function createRouter(init) {
     getBlocker,
     deleteBlocker,
     _internalFetchControllers: fetchControllers,
-    _internalActiveDeferreds: activeDeferreds,
-    // TODO: Remove setRoutes, it's temporary to avoid dealing with
-    // updating the tree while validating the update algorithm.
-    _internalSetRoutes
+    _internalActiveDeferreds: activeDeferreds
   };
   return router;
 } //#endregion
@@ -5402,7 +5373,7 @@ function getLoaderMatchesUntilBoundary(matches, boundaryId) {
   return boundaryMatches;
 }
 
-function getMatchesToLoad(history, state, matches, submission, location, isRevalidationRequired, cancelledDeferredRoutes, cancelledFetcherLoads, fetchLoadMatches, routesToUse, basename, pendingActionData, pendingError) {
+function getMatchesToLoad(history, state, matches, submission, location, isRevalidationRequired, cancelledDeferredRoutes, cancelledFetcherLoads, pendingActionData, pendingError, fetchLoadMatches) {
   let actionResult = pendingError ? Object.values(pendingError)[0] : pendingActionData ? Object.values(pendingActionData)[0] : undefined;
   let currentUrl = history.createURL(state.location);
   let nextUrl = history.createURL(location);
@@ -5441,56 +5412,36 @@ function getMatchesToLoad(history, state, matches, submission, location, isReval
   }); // Pick fetcher.loads that need to be revalidated
 
   let revalidatingFetchers = [];
-  fetchLoadMatches.forEach((f, key) => {
-    // Don't revalidate if fetcher won't be present in the subsequent render
+  fetchLoadMatches && fetchLoadMatches.forEach((f, key) => {
     if (!matches.some(m => m.route.id === f.routeId)) {
+      // This fetcher is not going to be present in the subsequent render so
+      // there's no need to revalidate it
       return;
-    }
-
-    let fetcherMatches = matchRoutes(routesToUse, f.path, basename); // If the fetcher path no longer matches, push it in with null matches so
-    // we can trigger a 404 in callLoadersAndMaybeResolveData
-
-    if (!fetcherMatches) {
+    } else if (cancelledFetcherLoads.includes(key)) {
+      // This fetcher was cancelled from a prior action submission - force reload
       revalidatingFetchers.push(_extends({
         key
-      }, f, {
-        matches: null,
-        match: null
+      }, f));
+    } else {
+      // Revalidating fetchers are decoupled from the route matches since they
+      // hit a static href, so they _always_ check shouldRevalidate and the
+      // default is strictly if a revalidation is explicitly required (action
+      // submissions, useRevalidator, X-Remix-Revalidate).
+      let shouldRevalidate = shouldRevalidateLoader(f.match, _extends({
+        currentUrl,
+        currentParams: state.matches[state.matches.length - 1].params,
+        nextUrl,
+        nextParams: matches[matches.length - 1].params
+      }, submission, {
+        actionResult,
+        defaultShouldRevalidate
       }));
-      return;
-    }
 
-    let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
-
-    if (cancelledFetcherLoads.includes(key)) {
-      revalidatingFetchers.push(_extends({
-        key,
-        matches: fetcherMatches,
-        match: fetcherMatch
-      }, f));
-      return;
-    } // Revalidating fetchers are decoupled from the route matches since they
-    // hit a static href, so they _always_ check shouldRevalidate and the
-    // default is strictly if a revalidation is explicitly required (action
-    // submissions, useRevalidator, X-Remix-Revalidate).
-
-
-    let shouldRevalidate = shouldRevalidateLoader(fetcherMatch, _extends({
-      currentUrl,
-      currentParams: state.matches[state.matches.length - 1].params,
-      nextUrl,
-      nextParams: matches[matches.length - 1].params
-    }, submission, {
-      actionResult,
-      defaultShouldRevalidate
-    }));
-
-    if (shouldRevalidate) {
-      revalidatingFetchers.push(_extends({
-        key,
-        matches: fetcherMatches,
-        match: fetcherMatch
-      }, f));
+      if (shouldRevalidate) {
+        revalidatingFetchers.push(_extends({
+          key
+        }, f));
+      }
     }
   });
   return [navigationMatches, revalidatingFetchers];
@@ -5587,14 +5538,13 @@ async function callLoaderOrAction(type, request, match, matches, basename, isSta
 
         location = createPath(resolvedLocation);
       } else if (!isStaticRequest) {
-        // Strip off the protocol+origin for same-origin + same-basename absolute
-        // redirects. If this is a static request, we can let it go back to the
-        // browser as-is
+        // Strip off the protocol+origin for same-origin absolute redirects.
+        // If this is a static reques, we can let it go back to the browser
+        // as-is
         let currentUrl = new URL(request.url);
         let url = location.startsWith("//") ? new URL(currentUrl.protocol + location) : new URL(location);
-        let isSameBasename = stripBasename(url.pathname, basename) != null;
 
-        if (url.origin === currentUrl.origin && isSameBasename) {
+        if (url.origin === currentUrl.origin) {
           location = url.pathname + url.search + url.hash;
         }
       } // Don't process redirects in the router during static requests requests.
@@ -5661,13 +5611,9 @@ async function callLoaderOrAction(type, request, match, matches, basename, isSta
   }
 
   if (result instanceof DeferredData) {
-    var _result$init, _result$init2;
-
     return {
       type: ResultType.deferred,
-      deferredData: result,
-      statusCode: (_result$init = result.init) == null ? void 0 : _result$init.status,
-      headers: ((_result$init2 = result.init) == null ? void 0 : _result$init2.headers) && new Headers(result.init.headers)
+      deferredData: result
     };
   }
 
@@ -5804,7 +5750,7 @@ function processLoaderData(state, matches, matchesToLoad, results, pendingError,
     let result = fetcherResults[index]; // Process fetcher non-redirect errors
 
     if (isErrorResult(result)) {
-      let boundaryMatch = findNearestBoundary(state.matches, match == null ? void 0 : match.route.id);
+      let boundaryMatch = findNearestBoundary(state.matches, match.route.id);
 
       if (!(errors && errors[boundaryMatch.route.id])) {
         errors = _extends({}, errors, {
@@ -5851,9 +5797,7 @@ function mergeLoaderData(loaderData, newLoaderData, matches, errors) {
       if (newLoaderData[id] !== undefined) {
         mergedLoaderData[id] = newLoaderData[id];
       }
-    } else if (loaderData[id] !== undefined && match.route.loader) {
-      // Preserve existing keys not included in newLoaderData and where a loader
-      // wasn't removed by HMR
+    } else if (loaderData[id] !== undefined) {
       mergedLoaderData[id] = loaderData[id];
     }
 
@@ -5990,14 +5934,7 @@ function isMutationMethod(method) {
 async function resolveDeferredResults(currentMatches, matchesToLoad, results, signal, isFetcher, currentLoaderData) {
   for (let index = 0; index < results.length; index++) {
     let result = results[index];
-    let match = matchesToLoad[index]; // If we don't have a match, then we can have a deferred result to do
-    // anything with.  This is for revalidating fetchers where the route was
-    // removed during HMR
-
-    if (!match) {
-      continue;
-    }
-
+    let match = matchesToLoad[index];
     let currentMatch = currentMatches.find(m => m.route.id === match.route.id);
     let isRevalidatingLoader = currentMatch != null && !isNewRouteInstance(currentMatch, match) && (currentLoaderData && currentLoaderData[match.route.id]) !== undefined;
 
@@ -6102,11 +6039,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _features_navbar_Navbar__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../features/navbar/Navbar */ "./client/features/navbar/Navbar.js");
 /* harmony import */ var _AppRoutes__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AppRoutes */ "./client/app/AppRoutes.js");
+/* harmony import */ var _src_components_Main__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../src/components/Main */ "./src/components/Main.js");
+
 
 
 
 var App = function App() {
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_features_navbar_Navbar__WEBPACK_IMPORTED_MODULE_1__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AppRoutes__WEBPACK_IMPORTED_MODULE_2__["default"], null));
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_features_navbar_Navbar__WEBPACK_IMPORTED_MODULE_1__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AppRoutes__WEBPACK_IMPORTED_MODULE_2__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_src_components_Main__WEBPACK_IMPORTED_MODULE_3__["default"], null));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (App);
 
@@ -6519,6 +6458,407 @@ var Navbar = function Navbar() {
   }, "Sign Up"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("hr", null));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Navbar);
+
+/***/ }),
+
+/***/ "./src/components/AllProducts.js":
+/*!***************************************!*\
+  !*** ./src/components/AllProducts.js ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+/* harmony import */ var _features_allProductsSlice__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../features/allProductsSlice */ "./src/features/allProductsSlice.js");
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+
+
+
+
+function AllProducts() {
+  var allProducts = (0,react_redux__WEBPACK_IMPORTED_MODULE_1__.useSelector)(function (state) {
+    return state.allProducts;
+  });
+  var dispatch = (0,react_redux__WEBPACK_IMPORTED_MODULE_1__.useDispatch)();
+  var handleAddProduct = function handleAddProduct() {
+    dispatch((0,_features_allProductsSlice__WEBPACK_IMPORTED_MODULE_2__.addProductAsync)({
+      id: allProducts.length + 1,
+      name: 'New Product'
+    }));
+  };
+  var handleRemoveProduct = function handleRemoveProduct(Product) {
+    dispatch((0,_features_allProductsSlice__WEBPACK_IMPORTED_MODULE_2__.deleteProductAsync)({
+      id: Product.id
+    }));
+  };
+  var handleUpdateProduct = function handleUpdateProduct(Product) {
+    dispatch((0,_features_allProductsSlice__WEBPACK_IMPORTED_MODULE_2__.editProductAsync)(Product));
+  };
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, "All Products"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("ul", null, allProducts.map(function (Product) {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("li", {
+      key: Product.id
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+      type: "text",
+      value: Product.name,
+      onChange: function onChange(e) {
+        return handleUpdateProduct(_objectSpread(_objectSpread({}, Product), {}, {
+          name: e.target.value
+        }));
+      }
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+      onClick: function onClick() {
+        return handleRemoveProduct(Product);
+      }
+    }, "Remove"));
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    onClick: handleAddProduct
+  }, "Add Product"));
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (AllProducts);
+
+/***/ }),
+
+/***/ "./src/components/Main.js":
+/*!********************************!*\
+  !*** ./src/components/Main.js ***!
+  \********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/dist/index.js");
+/* harmony import */ var _AllProducts__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AllProducts */ "./src/components/AllProducts.js");
+/* harmony import */ var _features_allProductsSlice__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../features/allProductsSlice */ "./src/features/allProductsSlice.js");
+/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+/* harmony import */ var _SingleProduct__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./SingleProduct */ "./src/components/SingleProduct.js");
+
+
+
+
+
+
+var Main = function Main() {
+  var dispatch = (0,react_redux__WEBPACK_IMPORTED_MODULE_3__.useDispatch)();
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    dispatch((0,_features_allProductsSlice__WEBPACK_IMPORTED_MODULE_2__.fetchProductsAsync)());
+  }, [dispatch]);
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Routes, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Route, {
+    path: "/allProducts",
+    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AllProducts__WEBPACK_IMPORTED_MODULE_1__["default"], null)
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Route, {
+    path: "/singleProduct",
+    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SingleProduct__WEBPACK_IMPORTED_MODULE_4__["default"], null)
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Route, null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Route, null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_5__.Route, null))));
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Main);
+
+/***/ }),
+
+/***/ "./src/components/SingleProduct.js":
+/*!*****************************************!*\
+  !*** ./src/components/SingleProduct.js ***!
+  \*****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router/dist/index.js");
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/dist/index.js");
+/* harmony import */ var _features_singleProductSlice__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../features/singleProductSlice */ "./src/features/singleProductSlice.js");
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+function _iterableToArrayLimit(arr, i) { var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"]; if (null != _i) { var _s, _e, _x, _r, _arr = [], _n = !0, _d = !1; try { if (_x = (_i = _i.call(arr)).next, 0 === i) { if (Object(_i) !== _i) return; _n = !1; } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0); } catch (err) { _d = !0, _e = err; } finally { try { if (!_n && null != _i["return"] && (_r = _i["return"](), Object(_r) !== _r)) return; } finally { if (_d) throw _e; } } return _arr; } }
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+
+
+
+var SingleProduct = function SingleProduct() {
+  var _useState = useState(false),
+    _useState2 = _slicedToArray(_useState, 2),
+    Loaded = _useState2[0],
+    setLoaded = _useState2[1];
+  var _useParams = (0,react_router_dom__WEBPACK_IMPORTED_MODULE_3__.useParams)(),
+    productId = _useParams.productId;
+  var dispatch = (0,react_redux__WEBPACK_IMPORTED_MODULE_1__.useDispatch)();
+  var singleProduct = (0,react_redux__WEBPACK_IMPORTED_MODULE_1__.useSelector)(_features_singleProductSlice__WEBPACK_IMPORTED_MODULE_2__.selectSingleProduct);
+  var name = singleProduct.name,
+    imageUrl = singleProduct.imageUrl,
+    description = singleProduct.description,
+    price = singleProduct.price;
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
+    dispatch((0,_features_singleProductSlice__WEBPACK_IMPORTED_MODULE_2__.fetchSingleProductAsync)(productId));
+    setLoaded(true);
+  }, [dispatch]);
+  if (Loaded && singleProduct) {
+    /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, "Product: ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_4__.Link, {
+      to: "/product/".concat(singleProduct.id)
+    }, singleProduct.name));
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Product Name: ", name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Product Image: ", imageUrl), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Description: ", description), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Price: ", price));
+  } else {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", null, "Product is not available for purchase at this time"));
+  }
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (SingleProduct);
+
+/***/ }),
+
+/***/ "./src/features/allProductsSlice.js":
+/*!******************************************!*\
+  !*** ./src/features/allProductsSlice.js ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "addProductAsync": () => (/* binding */ addProductAsync),
+/* harmony export */   "allProductsSlice": () => (/* binding */ allProductsSlice),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   "deleteProductAsync": () => (/* binding */ deleteProductAsync),
+/* harmony export */   "editProductAsync": () => (/* binding */ editProductAsync),
+/* harmony export */   "fetchProductsAsync": () => (/* binding */ fetchProductsAsync),
+/* harmony export */   "selectProducts": () => (/* binding */ selectProducts)
+/* harmony export */ });
+/* harmony import */ var _reduxjs_toolkit__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @reduxjs/toolkit */ "./node_modules/@reduxjs/toolkit/dist/redux-toolkit.esm.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */ _regeneratorRuntime = function _regeneratorRuntime() { return exports; }; var exports = {}, Op = Object.prototype, hasOwn = Op.hasOwnProperty, defineProperty = Object.defineProperty || function (obj, key, desc) { obj[key] = desc.value; }, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag"; function define(obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: !0, configurable: !0, writable: !0 }), obj[key]; } try { define({}, ""); } catch (err) { define = function define(obj, key, value) { return obj[key] = value; }; } function wrap(innerFn, outerFn, self, tryLocsList) { var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator, generator = Object.create(protoGenerator.prototype), context = new Context(tryLocsList || []); return defineProperty(generator, "_invoke", { value: makeInvokeMethod(innerFn, self, context) }), generator; } function tryCatch(fn, obj, arg) { try { return { type: "normal", arg: fn.call(obj, arg) }; } catch (err) { return { type: "throw", arg: err }; } } exports.wrap = wrap; var ContinueSentinel = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var IteratorPrototype = {}; define(IteratorPrototype, iteratorSymbol, function () { return this; }); var getProto = Object.getPrototypeOf, NativeIteratorPrototype = getProto && getProto(getProto(values([]))); NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype); var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype); function defineIteratorMethods(prototype) { ["next", "throw", "return"].forEach(function (method) { define(prototype, method, function (arg) { return this._invoke(method, arg); }); }); } function AsyncIterator(generator, PromiseImpl) { function invoke(method, arg, resolve, reject) { var record = tryCatch(generator[method], generator, arg); if ("throw" !== record.type) { var result = record.arg, value = result.value; return value && "object" == _typeof(value) && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) { invoke("next", value, resolve, reject); }, function (err) { invoke("throw", err, resolve, reject); }) : PromiseImpl.resolve(value).then(function (unwrapped) { result.value = unwrapped, resolve(result); }, function (error) { return invoke("throw", error, resolve, reject); }); } reject(record.arg); } var previousPromise; defineProperty(this, "_invoke", { value: function value(method, arg) { function callInvokeWithMethodAndArg() { return new PromiseImpl(function (resolve, reject) { invoke(method, arg, resolve, reject); }); } return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(innerFn, self, context) { var state = "suspendedStart"; return function (method, arg) { if ("executing" === state) throw new Error("Generator is already running"); if ("completed" === state) { if ("throw" === method) throw arg; return doneResult(); } for (context.method = method, context.arg = arg;;) { var delegate = context.delegate; if (delegate) { var delegateResult = maybeInvokeDelegate(delegate, context); if (delegateResult) { if (delegateResult === ContinueSentinel) continue; return delegateResult; } } if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) { if ("suspendedStart" === state) throw state = "completed", context.arg; context.dispatchException(context.arg); } else "return" === context.method && context.abrupt("return", context.arg); state = "executing"; var record = tryCatch(innerFn, self, context); if ("normal" === record.type) { if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue; return { value: record.arg, done: context.done }; } "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg); } }; } function maybeInvokeDelegate(delegate, context) { var methodName = context.method, method = delegate.iterator[methodName]; if (undefined === method) return context.delegate = null, "throw" === methodName && delegate.iterator["return"] && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method) || "return" !== methodName && (context.method = "throw", context.arg = new TypeError("The iterator does not provide a '" + methodName + "' method")), ContinueSentinel; var record = tryCatch(method, delegate.iterator, context.arg); if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel; var info = record.arg; return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel); } function pushTryEntry(locs) { var entry = { tryLoc: locs[0] }; 1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry); } function resetTryEntry(entry) { var record = entry.completion || {}; record.type = "normal", delete record.arg, entry.completion = record; } function Context(tryLocsList) { this.tryEntries = [{ tryLoc: "root" }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0); } function values(iterable) { if (iterable) { var iteratorMethod = iterable[iteratorSymbol]; if (iteratorMethod) return iteratorMethod.call(iterable); if ("function" == typeof iterable.next) return iterable; if (!isNaN(iterable.length)) { var i = -1, next = function next() { for (; ++i < iterable.length;) if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next; return next.value = undefined, next.done = !0, next; }; return next.next = next; } } return { next: doneResult }; } function doneResult() { return { value: undefined, done: !0 }; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, defineProperty(Gp, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), defineProperty(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) { var ctor = "function" == typeof genFun && genFun.constructor; return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name)); }, exports.mark = function (genFun) { return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun; }, exports.awrap = function (arg) { return { __await: arg }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () { return this; }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) { void 0 === PromiseImpl && (PromiseImpl = Promise); var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl); return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) { return result.done ? result.value : iter.next(); }); }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () { return this; }), define(Gp, "toString", function () { return "[object Generator]"; }), exports.keys = function (val) { var object = Object(val), keys = []; for (var key in object) keys.push(key); return keys.reverse(), function next() { for (; keys.length;) { var key = keys.pop(); if (key in object) return next.value = key, next.done = !1, next; } return next.done = !0, next; }; }, exports.values = values, Context.prototype = { constructor: Context, reset: function reset(skipTempReset) { if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined); }, stop: function stop() { this.done = !0; var rootRecord = this.tryEntries[0].completion; if ("throw" === rootRecord.type) throw rootRecord.arg; return this.rval; }, dispatchException: function dispatchException(exception) { if (this.done) throw exception; var context = this; function handle(loc, caught) { return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught; } for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i], record = entry.completion; if ("root" === entry.tryLoc) return handle("end"); if (entry.tryLoc <= this.prev) { var hasCatch = hasOwn.call(entry, "catchLoc"), hasFinally = hasOwn.call(entry, "finallyLoc"); if (hasCatch && hasFinally) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } else if (hasCatch) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); } else { if (!hasFinally) throw new Error("try statement without catch or finally"); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } } } }, abrupt: function abrupt(type, arg) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) { var finallyEntry = entry; break; } } finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null); var record = finallyEntry ? finallyEntry.completion : {}; return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record); }, complete: function complete(record, afterLoc) { if ("throw" === record.type) throw record.arg; return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel; }, finish: function finish(finallyLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel; } }, "catch": function _catch(tryLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc === tryLoc) { var record = entry.completion; if ("throw" === record.type) { var thrown = record.arg; resetTryEntry(entry); } return thrown; } } throw new Error("illegal catch attempt"); }, delegateYield: function delegateYield(iterable, resultName, nextLoc) { return this.delegate = { iterator: values(iterable), resultName: resultName, nextLoc: nextLoc }, "next" === this.method && (this.arg = undefined), ContinueSentinel; } }, exports; }
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
+
+var fetchProductsAsync = (0,_reduxjs_toolkit__WEBPACK_IMPORTED_MODULE_0__.createAsyncThunk)("allProducts", /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+  var _yield$axios$get, data;
+  return _regeneratorRuntime().wrap(function _callee$(_context) {
+    while (1) switch (_context.prev = _context.next) {
+      case 0:
+        _context.prev = 0;
+        _context.next = 3;
+        return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("/api/allProducts");
+      case 3:
+        _yield$axios$get = _context.sent;
+        data = _yield$axios$get.data;
+        return _context.abrupt("return", data);
+      case 8:
+        _context.prev = 8;
+        _context.t0 = _context["catch"](0);
+        console.log(_context.t0);
+      case 11:
+      case "end":
+        return _context.stop();
+    }
+  }, _callee, null, [[0, 8]]);
+})));
+// create an async thunk to edit a Product by ID
+var editProductAsync = (0,_reduxjs_toolkit__WEBPACK_IMPORTED_MODULE_0__.createAsyncThunk)("allProducts/editProduct", /*#__PURE__*/function () {
+  var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(_ref2) {
+    var id, name, description, price, _yield$axios$put, data;
+    return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+      while (1) switch (_context2.prev = _context2.next) {
+        case 0:
+          id = _ref2.id, name = _ref2.name, description = _ref2.description, price = _ref2.price;
+          _context2.next = 3;
+          return axios__WEBPACK_IMPORTED_MODULE_1__["default"].put("/api/allProducts/".concat(id), {
+            // use axios to make a PUT request to the specified URL with the provided Product ID and data to update
+            name: name,
+            description: description,
+            price: price
+          });
+        case 3:
+          _yield$axios$put = _context2.sent;
+          data = _yield$axios$put.data;
+          console.log("After axios put"); // print a message to the console
+          return _context2.abrupt("return", data);
+        case 7:
+        case "end":
+          return _context2.stop();
+      }
+    }, _callee2);
+  }));
+  return function (_x) {
+    return _ref3.apply(this, arguments);
+  };
+}());
+var addProductAsync = (0,_reduxjs_toolkit__WEBPACK_IMPORTED_MODULE_0__.createAsyncThunk)("allProducts/addProduct", /*#__PURE__*/function () {
+  var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(_ref4) {
+    var name, description, price, _yield$axios$post, data;
+    return _regeneratorRuntime().wrap(function _callee3$(_context3) {
+      while (1) switch (_context3.prev = _context3.next) {
+        case 0:
+          name = _ref4.name, description = _ref4.description, price = _ref4.price;
+          _context3.next = 3;
+          return axios__WEBPACK_IMPORTED_MODULE_1__["default"].post("/api/allProducts", {
+            name: name,
+            description: description,
+            price: price
+          });
+        case 3:
+          _yield$axios$post = _context3.sent;
+          data = _yield$axios$post.data;
+          return _context3.abrupt("return", data);
+        case 6:
+        case "end":
+          return _context3.stop();
+      }
+    }, _callee3);
+  }));
+  return function (_x2) {
+    return _ref5.apply(this, arguments);
+  };
+}());
+var deleteProductAsync = (0,_reduxjs_toolkit__WEBPACK_IMPORTED_MODULE_0__.createAsyncThunk)("allProducts/deleteProduct", /*#__PURE__*/function () {
+  var _ref6 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(id) {
+    var _yield$axios$delete, data;
+    return _regeneratorRuntime().wrap(function _callee4$(_context4) {
+      while (1) switch (_context4.prev = _context4.next) {
+        case 0:
+          _context4.next = 2;
+          return axios__WEBPACK_IMPORTED_MODULE_1__["default"]["delete"]("/api/allProducts/".concat(id));
+        case 2:
+          _yield$axios$delete = _context4.sent;
+          data = _yield$axios$delete.data;
+          return _context4.abrupt("return", data);
+        case 5:
+        case "end":
+          return _context4.stop();
+      }
+    }, _callee4);
+  }));
+  return function (_x3) {
+    return _ref6.apply(this, arguments);
+  };
+}());
+
+// handle the fulfilled action of the deleteTodoAsync async thunk
+//return {};  // set the state to an empty object
+
+// create a slice of the Redux store for managing a single todo item
+var allProductsSlice = (0,_reduxjs_toolkit__WEBPACK_IMPORTED_MODULE_0__.createSlice)({
+  name: 'allProducts',
+  // specify the name of the slice
+  initialState: {},
+  // set the initial state of the slice to an empty object
+  extraReducers: function extraReducers(builder) {
+    builder.addCase(fetchProductsAsync.fulfilled, function (state, action) {
+      // handle the fulfilled action of the fetchSingleTodoAsync async thunk
+      return action.payload; // set the state to the retrieved data
+    });
+
+    builder.addCase(editProductAsync.fulfilled, function (state, action) {
+      // handle the fulfilled action of the editTodoAsync async thunk
+      return action.payload; // set the state to the updated data
+    });
+
+    builder.addCase(addProductAsync.fulfilled, function (state, action) {
+      // Handling the success case of the add todo asynchronous thunk
+      state.push(action.payload);
+    });
+    builder.addCase(deleteProductAsync.fulfilled, function (state, action) {
+      var newState = state.filter(function (product) {
+        return product.id !== action.payload.id;
+      });
+      return newState;
+    });
+  }
+});
+
+// Selector to return products state
+var selectProducts = function selectProducts(state) {
+  return state.products;
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (allProductsSlice.reducer);
+
+/***/ }),
+
+/***/ "./src/features/singleProductSlice.js":
+/*!********************************************!*\
+  !*** ./src/features/singleProductSlice.js ***!
+  \********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   "fetchSingleProductAsync": () => (/* binding */ fetchSingleProductAsync),
+/* harmony export */   "selectSingleProduct": () => (/* binding */ selectSingleProduct),
+/* harmony export */   "singleProductSlice": () => (/* binding */ singleProductSlice)
+/* harmony export */ });
+/* harmony import */ var _reduxjs_toolkit__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @reduxjs/toolkit */ "./node_modules/@reduxjs/toolkit/dist/redux-toolkit.esm.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */ _regeneratorRuntime = function _regeneratorRuntime() { return exports; }; var exports = {}, Op = Object.prototype, hasOwn = Op.hasOwnProperty, defineProperty = Object.defineProperty || function (obj, key, desc) { obj[key] = desc.value; }, $Symbol = "function" == typeof Symbol ? Symbol : {}, iteratorSymbol = $Symbol.iterator || "@@iterator", asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator", toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag"; function define(obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: !0, configurable: !0, writable: !0 }), obj[key]; } try { define({}, ""); } catch (err) { define = function define(obj, key, value) { return obj[key] = value; }; } function wrap(innerFn, outerFn, self, tryLocsList) { var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator, generator = Object.create(protoGenerator.prototype), context = new Context(tryLocsList || []); return defineProperty(generator, "_invoke", { value: makeInvokeMethod(innerFn, self, context) }), generator; } function tryCatch(fn, obj, arg) { try { return { type: "normal", arg: fn.call(obj, arg) }; } catch (err) { return { type: "throw", arg: err }; } } exports.wrap = wrap; var ContinueSentinel = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var IteratorPrototype = {}; define(IteratorPrototype, iteratorSymbol, function () { return this; }); var getProto = Object.getPrototypeOf, NativeIteratorPrototype = getProto && getProto(getProto(values([]))); NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype); var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype); function defineIteratorMethods(prototype) { ["next", "throw", "return"].forEach(function (method) { define(prototype, method, function (arg) { return this._invoke(method, arg); }); }); } function AsyncIterator(generator, PromiseImpl) { function invoke(method, arg, resolve, reject) { var record = tryCatch(generator[method], generator, arg); if ("throw" !== record.type) { var result = record.arg, value = result.value; return value && "object" == _typeof(value) && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) { invoke("next", value, resolve, reject); }, function (err) { invoke("throw", err, resolve, reject); }) : PromiseImpl.resolve(value).then(function (unwrapped) { result.value = unwrapped, resolve(result); }, function (error) { return invoke("throw", error, resolve, reject); }); } reject(record.arg); } var previousPromise; defineProperty(this, "_invoke", { value: function value(method, arg) { function callInvokeWithMethodAndArg() { return new PromiseImpl(function (resolve, reject) { invoke(method, arg, resolve, reject); }); } return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(innerFn, self, context) { var state = "suspendedStart"; return function (method, arg) { if ("executing" === state) throw new Error("Generator is already running"); if ("completed" === state) { if ("throw" === method) throw arg; return doneResult(); } for (context.method = method, context.arg = arg;;) { var delegate = context.delegate; if (delegate) { var delegateResult = maybeInvokeDelegate(delegate, context); if (delegateResult) { if (delegateResult === ContinueSentinel) continue; return delegateResult; } } if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) { if ("suspendedStart" === state) throw state = "completed", context.arg; context.dispatchException(context.arg); } else "return" === context.method && context.abrupt("return", context.arg); state = "executing"; var record = tryCatch(innerFn, self, context); if ("normal" === record.type) { if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue; return { value: record.arg, done: context.done }; } "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg); } }; } function maybeInvokeDelegate(delegate, context) { var methodName = context.method, method = delegate.iterator[methodName]; if (undefined === method) return context.delegate = null, "throw" === methodName && delegate.iterator["return"] && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method) || "return" !== methodName && (context.method = "throw", context.arg = new TypeError("The iterator does not provide a '" + methodName + "' method")), ContinueSentinel; var record = tryCatch(method, delegate.iterator, context.arg); if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel; var info = record.arg; return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel); } function pushTryEntry(locs) { var entry = { tryLoc: locs[0] }; 1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry); } function resetTryEntry(entry) { var record = entry.completion || {}; record.type = "normal", delete record.arg, entry.completion = record; } function Context(tryLocsList) { this.tryEntries = [{ tryLoc: "root" }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0); } function values(iterable) { if (iterable) { var iteratorMethod = iterable[iteratorSymbol]; if (iteratorMethod) return iteratorMethod.call(iterable); if ("function" == typeof iterable.next) return iterable; if (!isNaN(iterable.length)) { var i = -1, next = function next() { for (; ++i < iterable.length;) if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next; return next.value = undefined, next.done = !0, next; }; return next.next = next; } } return { next: doneResult }; } function doneResult() { return { value: undefined, done: !0 }; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, defineProperty(Gp, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), defineProperty(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) { var ctor = "function" == typeof genFun && genFun.constructor; return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name)); }, exports.mark = function (genFun) { return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun; }, exports.awrap = function (arg) { return { __await: arg }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () { return this; }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) { void 0 === PromiseImpl && (PromiseImpl = Promise); var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl); return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) { return result.done ? result.value : iter.next(); }); }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () { return this; }), define(Gp, "toString", function () { return "[object Generator]"; }), exports.keys = function (val) { var object = Object(val), keys = []; for (var key in object) keys.push(key); return keys.reverse(), function next() { for (; keys.length;) { var key = keys.pop(); if (key in object) return next.value = key, next.done = !1, next; } return next.done = !0, next; }; }, exports.values = values, Context.prototype = { constructor: Context, reset: function reset(skipTempReset) { if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined); }, stop: function stop() { this.done = !0; var rootRecord = this.tryEntries[0].completion; if ("throw" === rootRecord.type) throw rootRecord.arg; return this.rval; }, dispatchException: function dispatchException(exception) { if (this.done) throw exception; var context = this; function handle(loc, caught) { return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught; } for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i], record = entry.completion; if ("root" === entry.tryLoc) return handle("end"); if (entry.tryLoc <= this.prev) { var hasCatch = hasOwn.call(entry, "catchLoc"), hasFinally = hasOwn.call(entry, "finallyLoc"); if (hasCatch && hasFinally) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } else if (hasCatch) { if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0); } else { if (!hasFinally) throw new Error("try statement without catch or finally"); if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc); } } } }, abrupt: function abrupt(type, arg) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) { var finallyEntry = entry; break; } } finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null); var record = finallyEntry ? finallyEntry.completion : {}; return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record); }, complete: function complete(record, afterLoc) { if ("throw" === record.type) throw record.arg; return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel; }, finish: function finish(finallyLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel; } }, "catch": function _catch(tryLoc) { for (var i = this.tryEntries.length - 1; i >= 0; --i) { var entry = this.tryEntries[i]; if (entry.tryLoc === tryLoc) { var record = entry.completion; if ("throw" === record.type) { var thrown = record.arg; resetTryEntry(entry); } return thrown; } } throw new Error("illegal catch attempt"); }, delegateYield: function delegateYield(iterable, resultName, nextLoc) { return this.delegate = { iterator: values(iterable), resultName: resultName, nextLoc: nextLoc }, "next" === this.method && (this.arg = undefined), ContinueSentinel; } }, exports; }
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
+
+var initialState = [];
+var fetchSingleProductAsync = (0,_reduxjs_toolkit__WEBPACK_IMPORTED_MODULE_0__.createAsyncThunk)("singleProduct", /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(id) {
+    var _yield$axios$get, data;
+    return _regeneratorRuntime().wrap(function _callee$(_context) {
+      while (1) switch (_context.prev = _context.next) {
+        case 0:
+          _context.prev = 0;
+          _context.next = 3;
+          return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("/api/products/".concat(id));
+        case 3:
+          _yield$axios$get = _context.sent;
+          data = _yield$axios$get.data;
+          return _context.abrupt("return", data);
+        case 8:
+          _context.prev = 8;
+          _context.t0 = _context["catch"](0);
+          console.error(_context.t0);
+        case 11:
+        case "end":
+          return _context.stop();
+      }
+    }, _callee, null, [[0, 8]]);
+  }));
+  return function (_x) {
+    return _ref.apply(this, arguments);
+  };
+}());
+var singleProductSlice = (0,_reduxjs_toolkit__WEBPACK_IMPORTED_MODULE_0__.createSlice)({
+  name: "singleProduct",
+  initialState: initialState,
+  reducers: {},
+  extraReducers: function extraReducers(builder) {
+    builder.addCase(fetchSingleProductAsync.fulfilled, function (state, action) {
+      return action.payload;
+    });
+  }
+});
+var selectSingleProduct = function selectSingleProduct(state) {
+  return state.singleProduct;
+};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (singleProductSlice.reducer);
 
 /***/ }),
 
@@ -38735,7 +39075,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-router */ "./node_modules/react-router/dist/index.js");
 /* harmony import */ var react_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @remix-run/router */ "./node_modules/@remix-run/router/dist/router.js");
 /**
- * React Router DOM v6.8.2
+ * React Router DOM v6.8.1
  *
  * Copyright (c) Remix Software Inc.
  *
@@ -39086,7 +39426,6 @@ if (true) {
   HistoryRouter.displayName = "unstable_HistoryRouter";
 }
 const isBrowser = typeof window !== "undefined" && typeof window.document !== "undefined" && typeof window.document.createElement !== "undefined";
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 /**
  * The public API for rendering a history-aware <a>.
  */
@@ -39104,28 +39443,20 @@ const Link = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__.forwardRef(function
   } = _ref4,
       rest = _objectWithoutPropertiesLoose(_ref4, _excluded);
 
-  let {
-    basename
-  } = react__WEBPACK_IMPORTED_MODULE_0__.useContext(react_router__WEBPACK_IMPORTED_MODULE_2__.UNSAFE_NavigationContext); // Rendered into <a href> for absolute URLs
-
+  // Rendered into <a href> for absolute URLs
   let absoluteHref;
   let isExternal = false;
 
-  if (typeof to === "string" && ABSOLUTE_URL_REGEX.test(to)) {
-    // Render the absolute href server- and client-side
-    absoluteHref = to; // Only check for external origins client-side
+  if (isBrowser && typeof to === "string" && /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(to)) {
+    absoluteHref = to;
+    let currentUrl = new URL(window.location.href);
+    let targetUrl = to.startsWith("//") ? new URL(currentUrl.protocol + to) : new URL(to);
 
-    if (isBrowser) {
-      let currentUrl = new URL(window.location.href);
-      let targetUrl = to.startsWith("//") ? new URL(currentUrl.protocol + to) : new URL(to);
-      let path = (0,react_router__WEBPACK_IMPORTED_MODULE_1__.stripBasename)(targetUrl.pathname, basename);
-
-      if (targetUrl.origin === currentUrl.origin && path != null) {
-        // Strip the protocol/origin/basename for same-origin absolute URLs
-        to = path + targetUrl.search + targetUrl.hash;
-      } else {
-        isExternal = true;
-      }
+    if (targetUrl.origin === currentUrl.origin) {
+      // Strip the protocol/origin for same-origin absolute URLs
+      to = targetUrl.pathname + targetUrl.search + targetUrl.hash;
+    } else {
+      isExternal = true;
     }
   } // Rendered into <a href> for relative URLs
 
@@ -39347,13 +39678,13 @@ function getDataRouterConsoleError(hookName) {
 
 function useDataRouterContext(hookName) {
   let ctx = react__WEBPACK_IMPORTED_MODULE_0__.useContext(react_router__WEBPACK_IMPORTED_MODULE_2__.UNSAFE_DataRouterContext);
-  !ctx ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.UNSAFE_invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
+  !ctx ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
   return ctx;
 }
 
 function useDataRouterState(hookName) {
   let state = react__WEBPACK_IMPORTED_MODULE_0__.useContext(react_router__WEBPACK_IMPORTED_MODULE_2__.UNSAFE_DataRouterStateContext);
-  !state ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.UNSAFE_invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
+  !state ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
   return state;
 }
 /**
@@ -39452,7 +39783,7 @@ function useSubmitImpl(fetcherKey, routeId) {
     };
 
     if (fetcherKey) {
-      !(routeId != null) ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.UNSAFE_invariant)(false, "No routeId available for useFetcher()") : 0 : void 0;
+      !(routeId != null) ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.invariant)(false, "No routeId available for useFetcher()") : 0 : void 0;
       router.fetch(fetcherKey, routeId, href, opts);
     } else {
       router.navigate(href, opts);
@@ -39468,7 +39799,7 @@ function useFormAction(action, _temp2) {
     basename
   } = react__WEBPACK_IMPORTED_MODULE_0__.useContext(react_router__WEBPACK_IMPORTED_MODULE_2__.UNSAFE_NavigationContext);
   let routeContext = react__WEBPACK_IMPORTED_MODULE_0__.useContext(react_router__WEBPACK_IMPORTED_MODULE_2__.UNSAFE_RouteContext);
-  !routeContext ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.UNSAFE_invariant)(false, "useFormAction must be used inside a RouteContext") : 0 : void 0;
+  !routeContext ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.invariant)(false, "useFormAction must be used inside a RouteContext") : 0 : void 0;
   let [match] = routeContext.matches.slice(-1); // Shallow clone path so we can modify it below, otherwise we modify the
   // object referenced by useMemo inside useResolvedPath
 
@@ -39543,17 +39874,17 @@ function useFetcher() {
     router
   } = useDataRouterContext(DataRouterHook.UseFetcher);
   let route = react__WEBPACK_IMPORTED_MODULE_0__.useContext(react_router__WEBPACK_IMPORTED_MODULE_2__.UNSAFE_RouteContext);
-  !route ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.UNSAFE_invariant)(false, "useFetcher must be used inside a RouteContext") : 0 : void 0;
+  !route ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.invariant)(false, "useFetcher must be used inside a RouteContext") : 0 : void 0;
   let routeId = (_route$matches = route.matches[route.matches.length - 1]) == null ? void 0 : _route$matches.route.id;
-  !(routeId != null) ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.UNSAFE_invariant)(false, "useFetcher can only be used on routes that contain a unique \"id\"") : 0 : void 0;
+  !(routeId != null) ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.invariant)(false, "useFetcher can only be used on routes that contain a unique \"id\"") : 0 : void 0;
   let [fetcherKey] = react__WEBPACK_IMPORTED_MODULE_0__.useState(() => String(++fetcherId));
   let [Form] = react__WEBPACK_IMPORTED_MODULE_0__.useState(() => {
-    !routeId ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.UNSAFE_invariant)(false, "No routeId available for fetcher.Form()") : 0 : void 0;
+    !routeId ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.invariant)(false, "No routeId available for fetcher.Form()") : 0 : void 0;
     return createFetcherForm(fetcherKey, routeId);
   });
   let [load] = react__WEBPACK_IMPORTED_MODULE_0__.useState(() => href => {
-    !router ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.UNSAFE_invariant)(false, "No router available for fetcher.load()") : 0 : void 0;
-    !routeId ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.UNSAFE_invariant)(false, "No routeId available for fetcher.load()") : 0 : void 0;
+    !router ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.invariant)(false, "No router available for fetcher.load()") : 0 : void 0;
+    !routeId ?  true ? (0,react_router__WEBPACK_IMPORTED_MODULE_1__.invariant)(false, "No routeId available for fetcher.load()") : 0 : void 0;
     router.fetch(fetcherKey, routeId, href);
   });
   let submit = useSubmitImpl(fetcherKey, routeId);
@@ -39849,7 +40180,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
 /**
- * React Router v6.8.2
+ * React Router v6.8.1
  *
  * Copyright (c) Remix Software Inc.
  *
@@ -40113,7 +40444,7 @@ function useHref(to, _temp) {
   let {
     relative
   } = _temp === void 0 ? {} : _temp;
-  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
+  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
   // router loaded. We can help them understand how to avoid that.
   "useHref() may be used only in the context of a <Router> component.") : 0 : void 0;
   let {
@@ -40163,7 +40494,7 @@ function useInRouterContext() {
  */
 
 function useLocation() {
-  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
+  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
   // router loaded. We can help them understand how to avoid that.
   "useLocation() may be used only in the context of a <Router> component.") : 0 : void 0;
   return react__WEBPACK_IMPORTED_MODULE_1__.useContext(LocationContext).location;
@@ -40187,7 +40518,7 @@ function useNavigationType() {
  */
 
 function useMatch(pattern) {
-  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
+  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
   // router loaded. We can help them understand how to avoid that.
   "useMatch() may be used only in the context of a <Router> component.") : 0 : void 0;
   let {
@@ -40206,7 +40537,7 @@ function useMatch(pattern) {
  * @see https://reactrouter.com/hooks/use-navigate
  */
 function useNavigate() {
-  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
+  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
   // router loaded. We can help them understand how to avoid that.
   "useNavigate() may be used only in the context of a <Router> component.") : 0 : void 0;
   let {
@@ -40321,7 +40652,7 @@ function useResolvedPath(to, _temp2) {
  */
 
 function useRoutes(routes, locationArg) {
-  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
+  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, // TODO: This error is probably because they somehow have 2 versions of the
   // router loaded. We can help them understand how to avoid that.
   "useRoutes() may be used only in the context of a <Router> component.") : 0 : void 0;
   let {
@@ -40369,7 +40700,7 @@ function useRoutes(routes, locationArg) {
     var _parsedLocationArg$pa;
 
     let parsedLocationArg = typeof locationArg === "string" ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.parsePath)(locationArg) : locationArg;
-    !(parentPathnameBase === "/" || ((_parsedLocationArg$pa = parsedLocationArg.pathname) == null ? void 0 : _parsedLocationArg$pa.startsWith(parentPathnameBase))) ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, "When overriding the location using `<Routes location>` or `useRoutes(routes, location)`, " + "the location pathname must begin with the portion of the URL pathname that was " + ("matched by all parent routes. The current pathname base is \"" + parentPathnameBase + "\" ") + ("but pathname \"" + parsedLocationArg.pathname + "\" was given in the `location` prop.")) : 0 : void 0;
+    !(parentPathnameBase === "/" || ((_parsedLocationArg$pa = parsedLocationArg.pathname) == null ? void 0 : _parsedLocationArg$pa.startsWith(parentPathnameBase))) ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, "When overriding the location using `<Routes location>` or `useRoutes(routes, location)`, " + "the location pathname must begin with the portion of the URL pathname that was " + ("matched by all parent routes. The current pathname base is \"" + parentPathnameBase + "\" ") + ("but pathname \"" + parsedLocationArg.pathname + "\" was given in the `location` prop.")) : 0 : void 0;
     location = parsedLocationArg;
   } else {
     location = locationFromContext;
@@ -40542,7 +40873,7 @@ function _renderMatches(matches, parentMatches, dataRouterState) {
 
   if (errors != null) {
     let errorIndex = renderedMatches.findIndex(m => m.route.id && (errors == null ? void 0 : errors[m.route.id]));
-    !(errorIndex >= 0) ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, "Could not find a matching route for the current errors: " + errors) : 0 : void 0;
+    !(errorIndex >= 0) ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, "Could not find a matching route for the current errors: " + errors) : 0 : void 0;
     renderedMatches = renderedMatches.slice(0, Math.min(renderedMatches.length, errorIndex + 1));
   }
 
@@ -40600,26 +40931,26 @@ function getDataRouterConsoleError(hookName) {
 
 function useDataRouterContext(hookName) {
   let ctx = react__WEBPACK_IMPORTED_MODULE_1__.useContext(DataRouterContext);
-  !ctx ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
+  !ctx ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
   return ctx;
 }
 
 function useDataRouterState(hookName) {
   let state = react__WEBPACK_IMPORTED_MODULE_1__.useContext(DataRouterStateContext);
-  !state ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
+  !state ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
   return state;
 }
 
 function useRouteContext(hookName) {
   let route = react__WEBPACK_IMPORTED_MODULE_1__.useContext(RouteContext);
-  !route ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
+  !route ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, getDataRouterConsoleError(hookName)) : 0 : void 0;
   return route;
 }
 
 function useCurrentRouteId(hookName) {
   let route = useRouteContext(hookName);
   let thisRoute = route.matches[route.matches.length - 1];
-  !thisRoute.route.id ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, hookName + " can only be used on routes that contain a unique \"id\"") : 0 : void 0;
+  !thisRoute.route.id ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, hookName + " can only be used on routes that contain a unique \"id\"") : 0 : void 0;
   return thisRoute.route.id;
 }
 /**
@@ -40702,7 +41033,7 @@ function useRouteLoaderData(routeId) {
 function useActionData() {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
   let route = react__WEBPACK_IMPORTED_MODULE_1__.useContext(RouteContext);
-  !route ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, "useActionData must be used inside a RouteContext") : 0 : void 0;
+  !route ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, "useActionData must be used inside a RouteContext") : 0 : void 0;
   return Object.values((state == null ? void 0 : state.actionData) || {})[0];
 }
 /**
@@ -40879,7 +41210,7 @@ function Navigate(_ref3) {
     state,
     relative
   } = _ref3;
-  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, // TODO: This error is probably because they somehow have 2 versions of
+  !useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, // TODO: This error is probably because they somehow have 2 versions of
   // the router loaded. We can help them understand how to avoid that.
   "<Navigate> may be used only in the context of a <Router> component.") : 0 : void 0;
    true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.warning)(!react__WEBPACK_IMPORTED_MODULE_1__.useContext(NavigationContext).static, "<Navigate> must not be used on the initial render in a <StaticRouter>. " + "This is a no-op, but you should modify your code so the <Navigate> is " + "only ever rendered in response to some user interaction or state change.") : 0;
@@ -40917,7 +41248,7 @@ function Outlet(props) {
  * @see https://reactrouter.com/components/route
  */
 function Route(_props) {
-   true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, "A <Route> is only ever to be used as the child of <Routes> element, " + "never rendered directly. Please wrap your <Route> in a <Routes>.") : 0 ;
+   true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, "A <Route> is only ever to be used as the child of <Routes> element, " + "never rendered directly. Please wrap your <Route> in a <Routes>.") : 0 ;
 }
 
 /**
@@ -40938,7 +41269,7 @@ function Router(_ref4) {
     navigator,
     static: staticProp = false
   } = _ref4;
-  !!useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, "You cannot render a <Router> inside another <Router>." + " You should never have more than one in your app.") : 0 : void 0; // Preserve trailing slashes on basename, so we can let the user control
+  !!useInRouterContext() ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, "You cannot render a <Router> inside another <Router>." + " You should never have more than one in your app.") : 0 : void 0; // Preserve trailing slashes on basename, so we can let the user control
   // the enforcement of trailing slashes throughout the app
 
   let basename = basenameProp.replace(/^\/*/, "/");
@@ -41177,8 +41508,8 @@ function createRoutesFromChildren(children, parentPath) {
       return;
     }
 
-    !(element.type === Route) ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, "[" + (typeof element.type === "string" ? element.type : element.type.name) + "] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>") : 0 : void 0;
-    !(!element.props.index || !element.props.children) ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.UNSAFE_invariant)(false, "An index route cannot have child routes.") : 0 : void 0;
+    !(element.type === Route) ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, "[" + (typeof element.type === "string" ? element.type : element.type.name) + "] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>") : 0 : void 0;
+    !(!element.props.index || !element.props.children) ?  true ? (0,_remix_run_router__WEBPACK_IMPORTED_MODULE_0__.invariant)(false, "An index route cannot have child routes.") : 0 : void 0;
     let treePath = [...parentPath, index];
     let route = {
       id: element.props.id || treePath.join("-"),

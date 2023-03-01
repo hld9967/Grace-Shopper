@@ -4,7 +4,7 @@ import { useParams, Link } from "react-router-dom";
 import {
   fetchSingleProductAsync,
   selectSingleProduct,
-} from "../features/singleCampusSlice";
+} from "../features/singleProductSlice";
 
 const SingleProduct = () => {
   const [Loaded, setLoaded] = useState(false);
