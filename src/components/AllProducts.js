@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import {addProductAsync, editProductAsync, deleteProductAsync} from "./features/allProductsSlice"
+import {addProductAsync, editProductAsync, deleteProductAsync} from "../features/allProductsSlice"
 
 function AllProducts() {
   const allProducts = useSelector(state => state.allProducts);
