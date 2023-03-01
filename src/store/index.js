@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { allProductsSlice } from '../features/allProductSlice';
+import { allProductsSlice } from '../features/allProductsSlice';
 import { singleProductSlice } from '../features/singleProductSlice';
 
 
