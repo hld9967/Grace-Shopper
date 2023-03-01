@@ -1,5 +1,6 @@
 body {
   font-family: sans-serif;
+  background-color: brown;
 }
 
 a {
@@ -26,3 +27,26 @@ img {
   border-radius: 5px;
   margin-right: 10px;
 }
+
+/* h1 {
+  background-color: white;
+  box-sizing: content-box; width: 100%; border: solid black 10px;
+  display: inline;
+  color: blue;
+} */
+
+
+/* #mainHeader {
+  background-color: white;
+  box-sizing: content-box; width: 100%; border: solid black 10px;
+  display: inline;
+  color: blue;
+} */
+
+/* #navBar {
+  background-color: white;
+  box-sizing: content-box; width: 100%; border: solid black 10px;
+  display: inline;
+  color: blue;
+} */
+
