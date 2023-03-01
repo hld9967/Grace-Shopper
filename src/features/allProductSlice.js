@@ -11,7 +11,7 @@ export const fetchProductsAsync = createAsyncThunk("allProducts", async () => {
 });
 // create an async thunk to edit a Product by ID
 export const editProductAsync = createAsyncThunk(
-  "todos/editTodo",
+  "allProducts/editProduct",
   async ({ id, name, description, price }) => {
     const { data } = await axios.put(`/api/allProducts/${id}`, {  // use axios to make a PUT request to the specified URL with the provided Product ID and data to update
       name,
