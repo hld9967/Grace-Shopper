@@ -5,17 +5,15 @@ import {
   Route,
 } from "react-router-dom";
 import AllProducts from "./AllProducts";
-import { fetchAllProductsAsync } from "../features/allProductsSlice"
+import { fetchProductsAsync } from "../features/allProductsSlice"
 import { useDispatch } from "react-redux";
-import { Navbar } from "./";
-
 
 
 const Main = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(fetchAllProductsAsync());
+    dispatch(fetchProductsAsync());
   }, [dispatch]);
 
   return (
