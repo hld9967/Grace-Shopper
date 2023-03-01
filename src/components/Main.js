@@ -6,8 +6,8 @@ import {
 import AllProducts from "./AllProducts";
 import { fetchProductsAsync } from "../features/allProductsSlice"
 import { useDispatch } from "react-redux";
-import { AllArmors, AllPotions, Navbar } from "./";
-import AllPotions from "./mayDelAllPotions";
+import AllArmors from "./AllArmors";
+import AllPotions from './AllPotions'
 import SingleProduct from "./SingleProduct"
 
 
