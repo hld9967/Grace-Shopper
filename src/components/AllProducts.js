@@ -1,36 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { addItems, removeItems, updateItems } from './allItemsSlice';
+import {addProductAsync, editProductAsync, deleteProductAsync} from "./features/allProductsSlice"
 
 function AllProducts() {
-  const allProducts = useSelector(state => state.allItems);
+  const allProducts = useSelector(state => state.allProducts);
   const dispatch = useDispatch();
 
-  const handleAddItem = () => {
-    dispatch(addItems({ id: allProducts.length + 1, name: 'New Item' }));
+  const handleAddProduct = () => {
+    dispatch(addProductAsync({ id: allProducts.length + 1, name: 'New Product' }));
   };
 
-  const handleRemoveItem = item => {
-    dispatch(removeItems({ id: item.id }));
+  const handleRemoveProduct = Product => {
+    dispatch(deleteProductAsync({ id: Product.id }));
   };
 
-  const handleUpdateItem = item => {
-    dispatch(updateItems(item));
+  const handleUpdateProduct = Product => {
+    dispatch(editProductAsync(Product));
   };
 
   return (
     <div>
-      <h1>All Items</h1>
+      <h1>All Products</h1>
       <ul>
-        {allProducts.map(item => (
-          <li key={item.id}>
-            <input type="text" value={item.name} onChange={e => handleUpdateItem({ ...item, name: e.target.value })} />
-            <button onClick={() => handleRemoveItem(item)}>Remove</button>
+        {allProducts.map(Product => (
+          <li key={Product.id}>
+            <input type="text" value={Product.name} onChange={e => handleUpdateProduct({ ...Product, name: e.target.value })} />
+            <button onClick={() => handleRemoveProduct(Product)}>Remove</button>
           </li>
         ))}
       </ul>
-      <button onClick={handleAddItem}>Add Item</button>
+      <button onClick={handleAddProduct}>Add Product</button>
     </div>
   );
 }
