@@ -13,9 +13,6 @@ export const fetchSinglePotion = createAsyncThunk(
   }
 );
 
-// const initialState = {
-//   info: {},
-// };
 
 const singlePotionSlice = createSlice({
   name: "singlePotion",
