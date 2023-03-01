@@ -13,7 +13,7 @@ const Main = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(fetchAllProductsAsync());
+    dispatch(fetchProductsAsync());
   }, [dispatch]);
 
   return (
