@@ -5,11 +5,9 @@ import {
   Route,
 } from "react-router-dom";
 import AllProducts from "./AllProducts";
-import { fetchAllProductsAsync } from "../features/allProductsSlice"
+import { fetchAllProductsAsync } from "../features/allProductsSlice";
 import { useDispatch } from "react-redux";
-import { Navbar } from "./";
-
-
+import { SingleProduct } from "./";
 
 const Main = () => {
   const dispatch = useDispatch();
@@ -19,9 +17,7 @@ const Main = () => {
   }, [dispatch]);
 
   return (
-    <Router>
       <div>
-        <Navbar />
         <Routes>
           <Route path="/allProducts" element={<AllProducts />} />
           <Route path="/singleProduct" element={<SingleProduct />} />
@@ -30,7 +26,6 @@ const Main = () => {
           <Route/>
         </Routes>
       </div>
-    </Router>
   );
 };
 
