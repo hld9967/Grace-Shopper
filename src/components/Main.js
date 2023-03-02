@@ -7,8 +7,8 @@ import AllProducts from "./AllProducts";
 import { fetchProductsAsync } from "../features/allProductsSlice"
 import { useDispatch } from "react-redux";
 import AllArmors from "./AllArmors";
-import AllPotions from './AllPotions'
-import SingleProduct from "./SingleProduct"
+import AllPotions from './AllPotions';
+import SingleProduct from "./SingleProduct";
 
 
 const Main = () => {
@@ -24,8 +24,8 @@ const Main = () => {
         <Routes>
           <Route path="/allProducts" element={<AllProducts />} />
           <Route path="/singleProduct" element={<SingleProduct />} />
-          <Route/>
-          <Route/>
+          <Route />
+          <Route />
           {/* <Route path="/allArmors" element={<AllArmors />} /> */}
           {/* <Route path="/allPotions" element={<AllPotions />} /> */}
         </Routes>

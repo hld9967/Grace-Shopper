@@ -13,7 +13,7 @@ const SingleProduct = () => {
   const dispatch = useDispatch();
 
   const singleProduct = useSelector(selectSingleProduct);
-  const { name, imageUrl, description, price} = singleProduct;
+  const { name, imageUrl, description, price } = singleProduct;
 
   useEffect(() => {
     dispatch(fetchSingleProductAsync(productId));
@@ -21,9 +21,9 @@ const SingleProduct = () => {
   }, [dispatch]);
 
   if (Loaded && singleProduct) {
-     (<div>
-        Product: <Link to={`/product/${singleProduct.id}`}>{singleProduct.name}</Link>
-      </div>);
+    (<div>
+      Product: <Link to={`/product/${singleProduct.id}`}>{singleProduct.name}</Link>
+    </div>);
     return (
       <div>
         <p>Product Name: {name}</p>

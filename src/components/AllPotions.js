@@ -9,7 +9,7 @@ const AllPotions = () => {
     <div>
       <h1 >All Potion</h1>
       {potions && potions.length ? potions.map((potion) => (
-        <div key={potion.id} > 
+        <div key={potion.id} >
           <NavLink to={`/potions/${potion.id}`} >
             <div className="potion row">
               <img src={potion.imageUrl} />
@@ -19,7 +19,7 @@ const AllPotions = () => {
             </div>
           </NavLink>
         </div>
-          ))
+      ))
         : null}
     </div>
   );

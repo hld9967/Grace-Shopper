@@ -11,30 +11,30 @@ export const fetchPotionsAsync = createAsyncThunk(`All Potion`, async () => {
   }
 });
 
-export const createPotionAsync = createAsyncThunk( `Create Potion`, async ({ name, imageUrl, description, price}) => {
-    const { data } = await axios.post(`/api/potions`, {
-      name,
-      imageUrl,
-      description,
-      price
-    });
-    return data;
-  }
+export const createPotionAsync = createAsyncThunk(`Create Potion`, async ({ name, imageUrl, description, price }) => {
+  const { data } = await axios.post(`/api/potions`, {
+    name,
+    imageUrl,
+    description,
+    price
+  });
+  return data;
+}
 );
 
 const potionsSlice = createSlice({
-    name: "potions",
-    initialState: [],
-    reducers: {},
-    extraReducers: (builder) => {
-      builder.addCase(fetchPotionsAsync.fulfilled, (state, action) => {
-        return action.payload;
-      });
-    },
-  });
-  
-  export const selectPotions = (state) => {
-    return state.potions;
-  };
-  
-  export default potionsSlice.reducer;
+  name: "potions",
+  initialState: [],
+  reducers: {},
+  extraReducers: (builder) => {
+    builder.addCase(fetchPotionsAsync.fulfilled, (state, action) => {
+      return action.payload;
+    });
+  },
+});
+
+export const selectPotions = (state) => {
+  return state.potions;
+};
+
+export default potionsSlice.reducer;
