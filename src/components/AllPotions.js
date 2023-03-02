@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { selectPotions } from "../features/allArmorSlice";
+import { selectPotions } from "../features/allPotionSlice";
 import { NavLink } from "react-router-dom";
 
 const AllPotions = () => {
