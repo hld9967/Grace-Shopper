@@ -4,8 +4,9 @@ import AllProducts from "./AllProducts";
 import { fetchProductsAsync } from "../features/allProductsSlice";
 import { useDispatch } from "react-redux";
 import AllArmors from "./AllArmors";
-import AllPotions from "./AllPotions";
+import AllPotions from './AllPotions';
 import SingleProduct from "./SingleProduct";
+
 
 const Main = () => {
   const dispatch = useDispatch();

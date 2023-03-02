@@ -19,7 +19,7 @@ const AllPotions = () => {
             </div>
           </NavLink>
         </div>
-          ))
+      ))
         : null}
     </div>
   );

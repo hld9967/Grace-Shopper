@@ -9,7 +9,7 @@ const AllArmors = () => {
     <div>
       <h1 >All Armor</h1>
       {armors && armors.length ? armors.map((armor) => (
-        <div key={armor.id} > 
+        <div key={armor.id} >
           <NavLink to={`/armors/${armor.id}`} >
             <div className="armor row">
               <img src={armor.imageUrl} />
@@ -19,7 +19,7 @@ const AllArmors = () => {
             </div>
           </NavLink>
         </div>
-          ))
+      ))
         : null}
     </div>
   );

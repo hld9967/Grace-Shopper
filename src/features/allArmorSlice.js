@@ -11,30 +11,30 @@ export const fetchArmorsAsync = createAsyncThunk(`All Armor`, async () => {
   }
 });
 
-export const createArmorAsync = createAsyncThunk( `Create Armor`, async ({ name, imageUrl, description, price}) => {
-    const { data } = await axios.post(`/api/armors`, {
-      name,
-      imageUrl,
-      description,
-      price
-    });
-    return data;
-  }
+export const createArmorAsync = createAsyncThunk(`Create Armor`, async ({ name, imageUrl, description, price }) => {
+  const { data } = await axios.post(`/api/armors`, {
+    name,
+    imageUrl,
+    description,
+    price
+  });
+  return data;
+}
 );
 
 const armorsSlice = createSlice({
-    name: "armors",
-    initialState: [],
-    reducers: {},
-    extraReducers: (builder) => {
-      builder.addCase(fetchArmorsAsync.fulfilled, (state, action) => {
-        return action.payload;
-      });
-    },
-  });
-  
-  export const selectArmors = (state) => {
-    return state.armors;
-  };
-  
-  export default armorsSlice.reducer;
+  name: "armors",
+  initialState: [],
+  reducers: {},
+  extraReducers: (builder) => {
+    builder.addCase(fetchArmorsAsync.fulfilled, (state, action) => {
+      return action.payload;
+    });
+  },
+});
+
+export const selectArmors = (state) => {
+  return state.armors;
+};
+
+export default armorsSlice.reducer;

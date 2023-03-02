@@ -14,7 +14,10 @@ const SingleProduct = () => {
   const dispatch = useDispatch();
 
   const singleProduct = useSelector(selectSingleProduct);
+<<<<<<< HEAD
   console.log(singleProduct)
+=======
+>>>>>>> e2bf035173440cdc994f0a3cdb9bfebc360cf0e8
   const { name, imageUrl, description, price } = singleProduct;
 
   useEffect(() => {
@@ -42,6 +45,28 @@ const SingleProduct = () => {
       );
     }
 
+<<<<<<< HEAD
+=======
+  if (Loaded && singleProduct) {
+    (<div>
+      Product: <Link to={`/product/${singleProduct.id}`}>{singleProduct.name}</Link>
+    </div>);
+    return (
+      <div>
+        <p>Product Name: {name}</p>
+        <p>Product Image: {imageUrl}</p>
+        <p>Description: {description}</p>
+        <p>Price: {price}</p>
+      </div>
+    );
+  } else {
+    return (
+      <div>
+        <p>Product is not available for purchase at this time</p>
+      </div>
+    );
+  }
+>>>>>>> e2bf035173440cdc994f0a3cdb9bfebc360cf0e8
 };
 
 export default SingleProduct;
