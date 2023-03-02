@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize')
-const db = require('../db')
+const db = require('./db')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt');
 
@@ -13,10 +13,19 @@ const User = db.define('user', {
   },
   password: {
     type: Sequelize.STRING,
+  },
+  email: {
+    type: Sequelize.STRING,
+  },
+  firstName: {
+    type: Sequelize.STRING
+  },
+  lastName: {
+    type: Sequelize.STRING
   }
 })
 
-module.exports = User
+module.exports = User;
 
 /**
  * instanceMethods

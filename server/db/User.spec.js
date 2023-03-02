@@ -1,9 +1,9 @@
 /* global describe beforeEach it */
 
 const {expect} = require('chai')
-const { db, models: { User } } = require('../index')
+const { db, models: { User } } = require('./index')
 const jwt = require('jsonwebtoken');
-const seed = require('../../../script/seed');
+const seed = require('../../script/seed');
 
 describe('User model', () => {
   let users;
