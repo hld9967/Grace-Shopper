@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { selectPotions } from "../features/allArmorSlice";
+import { selectPotions } from "../features/allPotionSlice";
 import { NavLink } from "react-router-dom";
 
 const AllPotions = () => {
@@ -9,7 +9,7 @@ const AllPotions = () => {
     <div>
       <h1 >All Potion</h1>
       {potions && potions.length ? potions.map((potion) => (
-        <div key={potion.id} > 
+        <div key={potion.id} >
           <NavLink to={`/potions/${potion.id}`} >
             <div className="potion row">
               <img src={potion.imageUrl} />

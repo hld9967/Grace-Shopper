@@ -3,7 +3,7 @@
 const db = require('./db')
 
 const User = require('./models/User')
-// const Product = require('./models/Product')
+const Product = require('./models/Product')
 const Armor = require('./models/Armor')
 const Potion = require('./models/Potion')
 const Skill = require('./models/Skill')
@@ -17,7 +17,7 @@ module.exports = {
   db,
   models: {
     User,
-    // Product,
+    Product,
     Armor,
     Potion,
     Skill,

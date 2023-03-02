@@ -14,7 +14,7 @@ router.get('/', async (req, res, next) => {
 })
 
 // GET /api/allProducts/:productId
-router.get('/allProducts', async (req, res, next) => {
+router.get('/:productId', async (req, res, next) => {
     try {
         const product = await Product.findByPk(req.params.productId, {
             attributes: ['id', 'name', 'imageUrl', 'description', 'price']
@@ -25,7 +25,7 @@ router.get('/allProducts', async (req, res, next) => {
     }
 })
 
-//PUT UPDATE /api/allProducts/:productId 
+//PUT UPDATE /api/allProducts/:productId
 router.put('/allProducts/:productId', async (req, res) => {
     try {
       const productId = req.params.id;
@@ -60,3 +60,5 @@ router.delete('/allProducts/:ProductId', async (req, res, next) => {
       next(error);
     }
   });
+
+module.exports = router
