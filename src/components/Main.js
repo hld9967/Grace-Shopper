@@ -1,10 +1,7 @@
 import React, { useEffect } from "react";
-import {
-  Routes,
-  Route,
-} from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import AllProducts from "./AllProducts";
-import { fetchProductsAsync } from "../features/allProductsSlice"
+import { fetchProductsAsync } from "../features/allProductsSlice";
 import { useDispatch } from "react-redux";
 import AllArmors from "./AllArmors";
 import AllPotions from './AllPotions';

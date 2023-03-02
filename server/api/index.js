@@ -10,8 +10,4 @@ router.use('/spells', require('./spells'))
 router.use('/travels', require('./travels'))
 router.use('/weapons', require('./weapons'))
 
-router.use((req, res, next) => {
-  const error = new Error('Not Found')
-  error.status = 404
-  next(error)
-})
+
