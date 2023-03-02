@@ -23,7 +23,7 @@ const Main = () => {
           <Route path="/singleProduct" element={<SingleProduct />} />
           <Route />
           <Route />
-          {/* <Route path="/allArmors" element={<AllArmors />} /> */}
+          <Route path="/allArmors" element={<AllArmors />} />
           {/* <Route path="/allPotions" element={<AllPotions />} /> */}
         </Routes>
       </div>

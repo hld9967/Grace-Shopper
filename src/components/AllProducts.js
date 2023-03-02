@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { addProductAsync, editProductAsync, deleteProductAsync } from "../features/allProductsSlice"
+import { addProductAsync, editProductAsync, deleteProductAsync, fetchProductsAsync } from "../features/allProductsSlice"
+import { selectProducts } from "../features/allProductsSlice";
 
 function AllProducts() {
-  const allProducts = useSelector(state => state.allProducts);
+  const allProducts = useSelector(selectProducts);
+  console.log(allProducts, '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
   const dispatch = useDispatch();
+
+  useEffect(()=> {
+    dispatch(fetchProductsAsync())
+  }, [dispatch])
 
   const handleAddProduct = () => {
     dispatch(addProductAsync({ id: allProducts.length + 1, name: 'New Product' }));

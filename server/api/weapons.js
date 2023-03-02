@@ -1,6 +1,5 @@
 const router = require('express').Router();
-const { models: { Weapon }} = require('../db')
-module.exports = router;
+const { Weapon } = require('../db')
 
 router.get('/', async (req, res, next) => {
     try {
@@ -23,3 +22,5 @@ router.get('/:weaponId', async (req, res, next) => {
       next(err)
     }
   })
+
+  module.exports = router;

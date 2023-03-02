@@ -1,6 +1,6 @@
 'use strict'
 
-const {db, models: {User, Armor, Potion, Skill, Spell, Travel, Weapon} } = require('../server/db')
+const {db, User, Armor, Potion, Skill, Spell, Travel, Weapon}  = require('../server/db')
 const hipsum = require('lorem-hipsum')
 const loremHipsum = () => hipsum({
   count: 3,

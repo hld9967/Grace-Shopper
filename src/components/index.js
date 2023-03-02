@@ -6,5 +6,5 @@ export { default as deleteProduct } from './deleteProduct';
 // export {default as }
 
 
-// export {default as AllArmors} from './AllArmors'
+export {default as AllArmors} from './AllArmors'
 // export {default as AllPotions} from './AllPotions'

@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize')
-const db = require('../db')
+const db = require('./db')
 
-const Travel = db.define('travel', {
+const Skill = db.define('skill', {
   name: {
     type: Sequelize.STRING,
     unique: true,
@@ -28,12 +28,19 @@ price: {
     min: 1,
     max: 100
   }
+// price: {
+//   type: Sequelize.DECIMAL(3,2),
+//   allowNull: false,
+//   validate: {
+//     min: 1,
+//     max: 100
+//   }
 },
 categories:{
    type: Sequelize.STRING,
    allowNull:false,
-   defaultValue: "Travel"
+   defaultValue: "Skill"
 }
 })
 
-module.exports = Travel;
+module.exports = Skill;

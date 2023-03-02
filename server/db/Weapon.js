@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize')
-const db = require('../db')
+const db = require('./db')
 
-const Potion = db.define('potion', {
+const Weapon = db.define('weapon', {
   name: {
     type: Sequelize.STRING,
     unique: true,
@@ -32,8 +32,8 @@ price: {
 categories:{
    type: Sequelize.STRING,
    allowNull:false,
-   defaultValue: "Potion"
+   defaultValue: "Weapon"
 }
 })
 
-module.exports = Potion;
+module.exports = Weapon;

@@ -1,5 +1,6 @@
 const router = require('express').Router()
-const { Product } = require('../db')
+const {Product} = require('../db')
+console.log(Product)
 
 // GET /api/allProducts
 router.get('/', async (req, res, next) => {
@@ -7,7 +8,9 @@ router.get('/', async (req, res, next) => {
         const product = await Product.findAll({
             attributes: ['id', 'name', 'imageUrl', 'description', 'price']
         })
+        
         res.json(product)
+        console.log(product)
     } catch (err) {
         next(err);
     }
@@ -15,11 +18,13 @@ router.get('/', async (req, res, next) => {
 
 // GET /api/allProducts/:productId
 router.get('/allProducts', async (req, res, next) => {
-    try {
+    try { console.log('inside of try')
         const product = await Product.findByPk(req.params.productId, {
             attributes: ['id', 'name', 'imageUrl', 'description', 'price']
         })
+        console.log(product)
         res.json(product)
+        console.log(product)
     } catch (err) {
         next(err)
     }
@@ -60,3 +65,5 @@ router.delete('/allProducts/:ProductId', async (req, res, next) => {
       next(error);
     }
   });
+
+  module.exports = router

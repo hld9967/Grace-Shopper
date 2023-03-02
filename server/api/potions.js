@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { models: { Potion }} = require('../db')
+const { Potion } = require('../db')
 module.exports = router;
 
 router.get('/', async (req, res, next) => {

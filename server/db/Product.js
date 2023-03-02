@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize')
-const db = require('../db')
+const db = require('./db')
 
-const Spell = db.define('spell', {
+const Product = db.define('product', {
   name: {
     type: Sequelize.STRING,
     unique: true,
@@ -22,18 +22,20 @@ const Spell = db.define('spell', {
     }
 },
 price: {
-  type: Sequelize.DECIMAL(5,2),
-  allowNull: false,
-  validate: {
-    min: 1,
-    max: 100
-  }
-},
-categories:{
-   type: Sequelize.STRING,
-   allowNull:false,
-   defaultValue: "Spell"
-}
-})
+    type: Sequelize.DECIMAL(3,2),
+    allowNull: false,
+    validate: {
+      min: 1,
+      max: 100
+    }
+  },
+  // categories:{
+  //    type: Sequelize.STRING,
+  //    allowNull:false,
+  //    validate: {
+  //    equals: "Armor"
+  //    }
+  // }
+  })
 
-module.exports = Spell;
+module.exports = Product;

@@ -4,6 +4,7 @@ import axios from "axios";
 export const fetchProductsAsync = createAsyncThunk("allProducts", async () => {
   try {
     const { data } = await axios.get(`/api/allProducts`);
+    console.log(data)
     return data;
   } catch (err) {
     console.log(err);
@@ -70,6 +71,8 @@ export const allProductsSlice = createSlice({
 });
 
 // Selector to return products state
-export const selectProducts = (state) => state.products;
+export const selectProducts = (state) => {
+  return state.allProducts
+};
 
 export default allProductsSlice.reducer;
